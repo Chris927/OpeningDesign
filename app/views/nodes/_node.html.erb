@@ -8,20 +8,22 @@
           <% end %>
         <% end %>
       <% else %>
-        <% (1..node.indentation_level_in_node_list).each do %>
-          <i class="icon-empty"></i>
+        <% cache(:action_suffix => "toggle_children_of_#{node.to_param}") do %>
+          <% (1..node.indentation_level_in_node_list).each do %>
+            <i class="icon-empty"></i>
+          <% end %>
+          <a id="toggleChildrenOf<%= node.to_param %>" class="btn btn-mini <%= node.children.empty? ? 'disabled' : '' %>"
+            data-toggle="collapse" data-target="#children_of_<%= node.to_param %>">
+            <i class="icon-<%= node_icon(node, current_user) %>"></i>
+          </a>
         <% end %>
-        <a id="toggleChildrenOf<%= node.to_param %>" class="btn btn-mini <%= node.children.empty? ? 'disabled' : '' %>"
-          data-toggle="collapse" data-target="#children_of_<%= node.to_param %>">
-          <i class="icon-<%= node_icon(node, current_user) %>"></i>
-        </a>
       <% end %>
-      <%= render :partial => 'nodes/node_in_list', :locals => { :node_in_list => node } %>
+        <%= render :partial => 'nodes/node_in_list', :locals => { :node_in_list => node } %>
     </div>
     <div class="node_background"></div>
     <div class="node_menus">
-      <%= render :partial => "#{node.class.name.pluralize.underscore}/#{node.class.name.underscore}_menu",
-      :object => node, :as => node.class.name.underscore.downcase %>
+        <%= render :partial => "#{node.class.name.pluralize.underscore}/#{node.class.name.underscore}_menu",
+        :object => node, :as => node.class.name.underscore.downcase %>
       <% if current_page? node %>
         <div class="toggle_details">
           <a class="btn btn-mini" data-toggle="collapse" data-target="#node_details">
@@ -39,32 +41,34 @@
   <% end %>
 
   <% unless node.children.empty? %> <%# rendering node.children %>
-    <div id="children_of_<%= node.to_param %>"
-      class="collapsibleNode collapse <%= node.collapsed_in_view?(current_user) && !current_page?(node) ? '' : 'in' %>" style="<%= 'overflow: visible;' if !node.collapsed_in_view?(current_user) || current_page?(node) %>">
+    <% cache("children_of_#{node.to_param}") do %>
+      <div id="children_of_<%= node.to_param %>"
+        class="collapsibleNode collapse <%= node.collapsed_in_view?(current_user) && !current_page?(node) ? '' : 'in' %>" style="<%= 'overflow: visible;' if !node.collapsed_in_view?(current_user) || current_page?(node) %>">
 
-      <% unless node.children_versions.empty? %> <%# render versions %>
-        <div class="node_container versions">
-          <div class="odnode span12">
-            <% (0..node.indentation_level_in_node_list).each do %>
-              <i class="icon-empty"></i>
-            <% end %>
-            <a id="toggleVersionsOf<%= node.to_param %>" class="btn btn-mini" data-toggle="collapse" data-target="#versions_of_<%= node.to_param %>">
-              <i class="icon-plus"></i>
-            </a>
-            VERSIONS...
+        <% unless node.children_versions.empty? %> <%# render versions %>
+          <div class="node_container versions">
+            <div class="odnode span12">
+              <% (0..node.indentation_level_in_node_list).each do %>
+                <i class="icon-empty"></i>
+              <% end %>
+              <a id="toggleVersionsOf<%= node.to_param %>" class="btn btn-mini" data-toggle="collapse" data-target="#versions_of_<%= node.to_param %>">
+                <i class="icon-plus"></i>
+              </a>
+              VERSIONS...
+            </div>
+            <div class="node_background"></div>
           </div>
-          <div class="node_background"></div>
-        </div>
-        <div id="versions_of_<%= node.to_param %>" class="collapse collapsibleVersions">
-          <% node.children_versions.each do |version| %>
-            <%= render :partial => '/nodes/node', :locals => { :node => version, :root => root } %>
-          <% end %>
-        </div>
-      <% end %>
+          <div id="versions_of_<%= node.to_param %>" class="collapse collapsibleVersions">
+            <% node.children_versions.each do |version| %>
+              <%= render :partial => '/nodes/node', :locals => { :node => version, :root => root } %>
+            <% end %>
+          </div>
+        <% end %>
 
-      <% node.children_without_versions.each do |child| %>
-        <%= render :partial => '/nodes/node', :locals => { :node => child, :root => root } %>
-      <% end %>
-    </div>
+        <% node.children_without_versions.each do |child| %>
+          <%= render :partial => '/nodes/node', :locals => { :node => child, :root => root } %>
+        <% end %>
+      </div>
+    <% end %> <%# cache %>
   <% end %>
 </div>
