@@ -45,4 +45,11 @@ class ApplicationController < ActionController::Base
     flash[:notice] = "Sorry, you are not authorized to access that page."
     redirect_to root_url
   end
+
+  def refresh_cache_for(node)
+    if node.parent
+      expire_fragment %r{children_of_#{node.parent.to_param}_*}
+    end
+  end
+
 end

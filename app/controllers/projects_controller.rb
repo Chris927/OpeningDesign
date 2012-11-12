@@ -38,7 +38,7 @@ class ProjectsController < ApplicationController
       format.json { render json: @project }
       format.js
     end
-    expire_relevant_view_fragments_of @project
+    refresh_cache_for @project
   end
 
   # GET /projects/1/edit
@@ -55,7 +55,7 @@ class ProjectsController < ApplicationController
   def create
     respond_to do |format|
       @project =  Project.create_by_user(current_user, params[:project], params[:node_id])
-      expire_relevant_view_fragments_of @project
+      refresh_cache_for @project
       if @project.persisted?
         format.html { redirect_to @project, notice: "#{@project.parent ? t("sub_project") : t("project")} was successfully created." }
         format.json { render json: @project, status: :created, location: @project }
@@ -85,7 +85,7 @@ class ProjectsController < ApplicationController
         format.js { flash[:notice] = "Unable to update project: #{@project.errors.full_messages.join(", ")}" }
       end
     end
-    expire_relevant_view_fragments_of @project
+    refresh_cache_for @project
   end
 
   # DELETE /projects/1
@@ -93,7 +93,7 @@ class ProjectsController < ApplicationController
   def destroy
     @project = Project.find(params[:id])
     raise NotAuthorizedException.new() unless @project.writable_by? current_user
-    expire_relevant_view_fragments_of @project
+    refresh_cache_for @project
     @project.destroy
 
     respond_to do |format|
@@ -108,11 +108,4 @@ class ProjectsController < ApplicationController
     send_file file, :filename => "#{@project.name}.zip"
   end
 
-  private
-
-  def expire_relevant_view_fragments_of(project)
-    if project.parent
-      expire_fragment("children_of_#{project.parent.to_param}")
-    end
-  end
 end
